@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.Devices.Enumeration;
+using Windows.Devices.I2c;
 
 namespace App2.Code
 {
@@ -9,6 +11,7 @@ namespace App2.Code
     {
         private static AppController Controller;
         private static GPIOController GpioController;
+
 
         Task _mainTask;
         CancellationTokenSource _cancelationSource = null;
@@ -18,7 +21,7 @@ namespace App2.Code
         {
             _cancelationSource = new CancellationTokenSource();
             _cancelationSource.Token.Register(() => { Debug.WriteLine("Action cancelled."); });
-            _mainTask = new Task(BME280Test, _cancelationSource.Token);
+            _mainTask = new Task(TSL2671Test, _cancelationSource.Token);
         }
 
         public static void Initialize()
@@ -42,6 +45,49 @@ namespace App2.Code
         {
 
             Controller._cancelationSource.CancelAfter(delay);
+
+        }
+
+        private async void TSL2671Test()
+        {
+            //Initialize i2c tsl2561 device 
+            var settings = new I2cConnectionSettings(TSL2561Sensor.TSL2561_ADDR);
+            settings.BusSpeed = I2cBusSpeed.FastMode;
+            settings.SharingMode = I2cSharingMode.Shared;
+
+            string aqs = I2cDevice.GetDeviceSelector("I2C1");  /* Find the selector string for the I2C bus controller                   */
+            var dis = await DeviceInformation.FindAllAsync(aqs);            /* Find the I2C bus controller device with our selector string           */
+
+            var I2CDev = await I2cDevice.FromIdAsync(dis[0].Id, settings);
+
+            TSL2561Sensor TSL2561 = new TSL2561Sensor(ref I2CDev);
+
+            TSL2561.PowerUp();
+
+            Debug.WriteLine("TSL2561 ID: " + TSL2561.GetId());
+
+            Boolean Gain = false;
+            uint MS = (uint)TSL2561.SetTiming(false, 2);
+            double CurrentLux = 0;
+
+            for (var i = 0; i < 100; i++)
+            {
+                uint[] Data = TSL2561.GetData();
+
+                Debug.WriteLine("Data1: " + Data[0] + ", Data2: " + Data[1]);
+
+                CurrentLux = TSL2561.GetLux(Gain, MS, Data[0], Data[1]);
+
+                String strLux = String.Format("{0:0.00}", CurrentLux);
+                String strInfo = "Luminosity: " + strLux + " lux";
+
+                Debug.WriteLine(strInfo);
+
+
+                await Task.Delay(1000);
+            }
+
+
 
         }
 
