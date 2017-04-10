@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.Devices.Enumeration;
 using Windows.Devices.I2c;
+using Windows.IoT.Core.HWInterfaces.MPR121;
 
 namespace App2.Code
 {
@@ -47,6 +48,25 @@ namespace App2.Code
             Controller._cancelationSource.CancelAfter(delay);
 
         }
+
+        private async void MPR121Test()
+        {
+            MPR121 mpr121 = new MPR121();
+
+            string aqs = I2cDevice.GetDeviceSelector();
+            var i2cDeviceList = await DeviceInformation.FindAllAsync(aqs);
+
+            if (i2cDeviceList != null && i2cDeviceList.Count > 0)
+            {
+                bool connected = await mpr121.OpenConnection(i2cDeviceList[0].Id);
+                if (connected)
+                {
+                    mpr121.PinReleased += (s, e) => { e.Released.ToArray(); };
+                    mpr121.PinTouched += (s, e) => { e.Touched.ToArray(); };
+                }
+            }
+        }
+
 
         private async void TSL2671Test()
         {
