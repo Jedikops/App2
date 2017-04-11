@@ -1,4 +1,7 @@
-﻿using Windows.UI.Xaml.Controls;
+﻿using System;
+using App2.ViewModels;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -13,9 +16,18 @@ namespace App2
         public MainPage()
         {
             this.InitializeComponent();
-
-
+            this.Loaded += MainPage_Loaded;
+            
+            
         }
+
+        private void MainPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            ViewModel = new MainPageViewModel();
+            Bindings.Update();
+        }
+
+        public MainPageViewModel ViewModel { get; private set; }
 
     }
 }
