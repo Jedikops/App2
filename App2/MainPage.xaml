@@ -9,9 +9,17 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
         <ListView  x:Name="Lista" ItemsSource="{x:Bind ViewModel.Friends}" 
                    SelectedItem="{x:Bind ViewModel.SelectedFriend,Mode=TwoWay}"
                    DisplayMemberPath="FirstName"></ListView>
-
+        <StackPanel Grid.Column="1">
+            <TextBox Text="{x:Bind ViewModel.SelectedFriend.FirstName, Mode=TwoWay}" Header="Firstname" Margin="10"></TextBox>
+            <TextBox Text="{x:Bind ViewModel.SelectedFriend.LastName, Mode=TwoWay}" Header="Lastname" Margin="10"></TextBox>
+            <CheckBox IsChecked="{x:Bind ViewModel.SelectedFriend.IsDeveloper,Mode=TwoWay}" Content="Is developer" Margin="10"></CheckBox>
+        </StackPanel>
     </Grid>
 </Page>
