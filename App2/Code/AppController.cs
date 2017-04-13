@@ -11,7 +11,6 @@ namespace App2.Code
     public class AppController
     {
         private static AppController Controller;
-        private static GPIOController GpioController;
 
 
         Task _mainTask;
@@ -22,7 +21,7 @@ namespace App2.Code
         {
             _cancelationSource = new CancellationTokenSource();
             _cancelationSource.Token.Register(() => { Debug.WriteLine("Action cancelled."); });
-            _mainTask = new Task(TSL2671Test, _cancelationSource.Token);
+            _mainTask = new Task(MPR121Test, _cancelationSource.Token);
         }
 
         public static void Initialize()
@@ -30,7 +29,7 @@ namespace App2.Code
             try
             {
                 Controller = new AppController();
-                GpioController = new GPIOController();
+
             }
             catch (Exception ex)
             {
@@ -51,9 +50,12 @@ namespace App2.Code
 
         private async void MPR121Test()
         {
-            MPR121 mpr121 = new MPR121();
+            byte MPR121_I2CADDR_DEFAULT = 0x5A;
+            int IRQ_HOOKUPPIN_DEFAULT = 5;
 
-            string aqs = I2cDevice.GetDeviceSelector();
+            MPR121 mpr121 = new MPR121(MPR121_I2CADDR_DEFAULT, IRQ_HOOKUPPIN_DEFAULT);
+
+            string aqs = I2cDevice.GetDeviceSelector("I2C1");
             var i2cDeviceList = await DeviceInformation.FindAllAsync(aqs);
 
             if (i2cDeviceList != null && i2cDeviceList.Count > 0)
@@ -61,10 +63,24 @@ namespace App2.Code
                 bool connected = await mpr121.OpenConnection(i2cDeviceList[0].Id);
                 if (connected)
                 {
-                    mpr121.PinReleased += (s, e) => { e.Released.ToArray(); };
-                    mpr121.PinTouched += (s, e) => { e.Touched.ToArray(); };
+                    mpr121.PinTouched += OnTouch;
+                    mpr121.PinReleased += OnReleased;
+
                 }
             }
+        }
+        private void OnTouch(object sender, PinTouchedEventArgs args)
+        {
+            var pins = args.Touched.ToArray();
+
+            Debug.WriteLine("Following pin(s) were touched: " + String.Join(",", pins));
+        }
+
+        private void OnReleased(object sender, PinReleasedEventArgs args)
+        {
+            var pins = args.Released.ToArray();
+
+            Debug.WriteLine("Following pin(s) were released: " + String.Join(",", pins));
         }
 
 
@@ -154,6 +170,7 @@ namespace App2.Code
         {
             try
             {
+                var GpioController = new GPIOController();
                 Random rand = new Random();
                 Debug.WriteLine("Starting blinking action.");
                 while (true)
