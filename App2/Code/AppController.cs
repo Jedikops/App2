@@ -21,7 +21,7 @@ namespace App2.Code
         {
             _cancelationSource = new CancellationTokenSource();
             _cancelationSource.Token.Register(() => { Debug.WriteLine("Action cancelled."); });
-            _mainTask = new Task(MPR121Test, _cancelationSource.Token);
+            _mainTask = new Task(DisplayI2CTest, _cancelationSource.Token);
         }
 
         public static void Initialize()
@@ -46,6 +46,36 @@ namespace App2.Code
 
             Controller._cancelationSource.CancelAfter(delay);
 
+        }
+
+        private async void DisplayI2CTest()
+        {
+            byte DEVICE_I2C_ADDRESS = 0x27;
+            const byte EN = 0x02;
+            const byte RW = 0x01;
+            const byte RS = 0x00;
+            const byte D4 = 0x04;
+            const byte D5 = 0x05;
+            const byte D6 = 0x06;
+            const byte D7 = 0x07;
+            const byte BL = 0x03;
+
+            var i2cSettings = new I2cConnectionSettings(DEVICE_I2C_ADDRESS);
+            i2cSettings.BusSpeed = I2cBusSpeed.FastMode;
+            string aqs = I2cDevice.GetDeviceSelector("I2C1");
+            var dis = await DeviceInformation.FindAllAsync(aqs);
+            I2cDevice dev = await I2cDevice.FromIdAsync(dis[0].Id, i2cSettings);
+            DisplayI2C lcd = new DisplayI2C(ref dev, RS, RW, EN, D4, D5, D6, D7, BL);
+            lcd.init();
+            lcd.createSymbol(new byte[] { 0x00, 0x00, 0x0A, 0x00, 0x11, 0x0E, 0x00, 0x00 }, 0x00);
+
+            lcd.prints("Good morning,");
+
+            lcd.gotoxy(0, 1);
+
+            lcd.prints("gentlemans");
+
+            lcd.printSymbol(0x00);
         }
 
         private async void MPR121Test()

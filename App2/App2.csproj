@@ -101,6 +101,7 @@
     <Compile Include="Base\Observable.cs" />
     <Compile Include="Code\AppController.cs" />
     <Compile Include="Code\BME280.cs" />
+    <Compile Include="Code\DisplayI2C.cs" />
     <Compile Include="Code\GPIOController.cs" />
     <Compile Include="Code\GPIOPin.cs" />
     <Compile Include="Code\TSL2561.cs" />
